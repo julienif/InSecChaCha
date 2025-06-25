@@ -1,5 +1,6 @@
 import array
 import utils
+import time
 
 class ChaChaBlock:
     '''
@@ -31,7 +32,6 @@ class ChaChaBlock:
         self.__block = self._construct_block()
         
         self.keystream = self.__block[:]
-        self._create_keystream()
 
     def next_keystream(self):
         '''
@@ -50,13 +50,21 @@ class ChaChaBlock:
             input_path: Path to the file to encrypt 
             output_path: Path to the ciphertext
         '''
+        
+        print("Encrypting...\n")
+        time.sleep(1)
+        self._print_keystream(init=True)
+        time.sleep(2)
+        self._create_keystream()
         with open(output_path, 'wb') as f:
             for chunk in utils.read_in_chunks(input_path):
                 keystream = self.keystream.tobytes()
+                self._print_keystream()
                 ciphertext = bytes([a ^ b for a, b in zip(chunk, keystream)])
                 f.write(ciphertext)
                 self.next_keystream()
-        print("Plaintext encrypted at: " + output_path)
+                time.sleep(0.5)
+        print("Plaintext encrypted at: " + output_path + "\n")
 
     def decrypt_ciphertext(self, input_path='../res/ciphertext.bin', output_path='../res/plaintext.txt'):
         '''
@@ -66,12 +74,21 @@ class ChaChaBlock:
             input_path: Path to the file to decrypt 
             output_path: Path to the plaintext decrypted
         '''
+
+        print("Decrypting...\n")
+        time.sleep(1)
+
+        self._print_keystream(init=True)
+        time.sleep(2)
+        self._create_keystream()
         with open(output_path, 'wb') as f:
             for chunk in utils.read_in_chunks(input_path):
                 keystream = self.keystream.tobytes()
+                self._print_keystream()
                 plaintext = bytes([a ^ b for a, b in zip(chunk, keystream)])
                 f.write(plaintext)
                 self.next_keystream()
+                time.sleep(0.5)
         print("Ciphertext decrypted at: " + output_path)
 
     def _construct_block(self):
@@ -97,7 +114,23 @@ class ChaChaBlock:
         block[13:] = self.nonce
 
         return block
-    
+
+    def _print_keystream(self, init=False):
+        '''
+        print the current keystream in the terminal in ascii encoding
+        '''
+        
+        if not init:
+            print("     -----Keystream number " + str(self.counter) + "-----")
+        else:
+            print("     -----Initial Block-----")
+
+        for i in range(0, len(self.keystream), 4):
+            line = ' '.join(f"{elem:<10x}" for elem in self.keystream[i:i+4])
+            print(line)
+        
+        print("\n")
+        
     def _rotate(self, x, k):
         '''
         rotate the bitstring x to the left by k positions
