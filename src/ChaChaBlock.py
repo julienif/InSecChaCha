@@ -117,7 +117,7 @@ class ChaChaBlock:
 
     def _print_keystream(self, init=False):
         '''
-        print the current keystream in the terminal in ascii encoding
+        print the current keystream in the terminal in hexadecimal
         '''
         
         if not init:
